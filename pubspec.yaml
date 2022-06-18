@@ -1,0 +1,61 @@
+name: mobile
+description: Flutter app for lichess.org
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 0.1.0
+
+environment:
+  sdk: ">=2.17.3 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_appauth:
+  flutter_dotenv:
+  flutter_bloc:
+  flutter_secure_storage:
+  freezed_annotation:
+  device_info_plus: ^3.2.4
+  meta:
+  rest_client:
+  dio:
+  path:
+  rxdart:
+  http:
+  chess:
+  bishop:
+  chessground: 
+    path: '../flutter_chessground'
+  shared_preferences:
+  get_it:
+  go_router:
+  json_annotation: ^4.5.0
+#  localstorage:
+  material_design_icons_flutter:
+  cupertino_icons:
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  build_runner:
+  freezed:
+
+#  copy_with_extension:
+
+#  copy_with_extension_gen:
+  flutter_lints:
+  json_serializable:
+
+flutter:
+  uses-material-design: true
+
+  # Enable generation of localized Strings from arb files.
+  generate: true
+
+  assets:
+    - assets/conf/
+    # Add assets from the images directory to the application.
+    - assets/images/
