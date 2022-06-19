@@ -19,10 +19,11 @@ class LilaResult<T> {
 class LilaRepo {
   LilaRepo() {
     _dio.options.baseUrl = env.origin;
-    _dio.options.connectTimeout = 0; // dio actually triggers this on chrome
-    _dio.options.receiveTimeout = 0; // XmlHTTPRequests long after successful
+    _dio.options.connectTimeout = 0;
+    // dio actually triggers this on chrome-js XmlHTTPRequests long after successful
+    // transfers complete, so diable timeouts as web is probably a useful dev target
+    _dio.options.receiveTimeout = 0;
     _dio.options.headers = {
-      // transfers complete, so diable timeouts.
       'x-requested-with': 'XMLHttpRequest', // of course
       'origin': 'http://locdalhost', // chrome XMLHttpRequest blocks these too
       'user-agent': 'lichess-mobile',
