@@ -11,9 +11,9 @@ class UserRepo {
   bool get loggedIn => false; //env.store.sessionId != null;
 
   Future<void> init() async {
-    if (!(await info()).ok) {
-      // this is temporary, don't want to block startup trying to connect
-      await login();
+    // this is temporary, don't want to block startup trying to connect
+    if (await env.lila.online()) {
+      // we have networking
     }
   }
 
@@ -26,7 +26,7 @@ class UserRepo {
     password ??= await env.store.secureGet(keyPassword);
     if (userId == null || password == null) {
       _clearSession();
-      return LilaResult(status: 0);
+      throw Exception('userId or password is null');
     }
     final res = await env.lila.post(
       '/login',
@@ -37,7 +37,7 @@ class UserRepo {
       rspFactory: User.fromJson,
     );
     Map<String, List<String>>? hdrs = res.headers;
-    if (!loggedIn && hdrs != null) {
+    if (hdrs != null) {
       env.store.sessionId = RegExp(r'sessionId=([A-Za-z0-9+/]{6,})')
           .firstMatch(hdrs['set-cookie']?.first ?? '')
           ?.group(1);

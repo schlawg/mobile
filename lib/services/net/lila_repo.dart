@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '/services/env.dart';
@@ -11,28 +10,25 @@ class LilaResult<T> {
   final Map<String, List<String>>? headers;
   final T? object;
   final dynamic body;
-  /*const*/ LilaResult({required this.status, this.headers, this.object, this.body});
+  const LilaResult({required this.status, this.headers, this.object, this.body});
 
   String get message => body?.toString() ?? '';
   bool get ok => status >= 200 && status < 300;
-
-  @override
-  String toString() {
-    return "status: $status\nheaders: ${headers?.toString()}\nbody: $body\n";
-  }
 }
 
 class LilaRepo {
   LilaRepo() {
     _dio.options.baseUrl = env.origin;
-    _dio.options.connectTimeout = 5000;
-    _dio.options.receiveTimeout = 5000;
+    _dio.options.connectTimeout = 0; // dio actually triggers this on chrome
+    _dio.options.receiveTimeout = 0; // XmlHTTPRequests long after successful
     _dio.options.headers = {
-      'User-Agent': 'lichess-mobile',
-      'Accept': 'application/vnd.lichess.v5+json',
-      'Origin': 'capacitor://localhost',
-      "X-Requested-With": "XMLHttpRequest"
+      // transfers complete, so diable timeouts.
+      'x-requested-with': 'XMLHttpRequest', // of course
+      'origin': 'http://locdalhost', // chrome XMLHttpRequest blocks these too
+      'user-agent': 'lichess-mobile',
+      'accept': 'application/vnd.lichess.v5+json',
     };
+
     if (kDebugMode) {
       _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (opts, h) => {_logRequest(opts), h.next(opts)},
@@ -40,6 +36,10 @@ class LilaRepo {
         onError: (err, h) => {_logError(err), h.next(err)},
       ));
     }
+  }
+
+  Future<bool> online() async {
+    return (await request('OPTIONS', '/')).ok;
   }
 
   Future<LilaResult<T>> get<T>(String path, {RspFactory<T>? rspFactory}) async {
@@ -101,8 +101,7 @@ class LilaRepo {
   }
 
   void _logRequest(RequestOptions opts) {
-    // formatted for flutter debug console
-    final sb = StringBuffer('Request: ${opts.method} ${opts.uri.path}');
+    final sb = StringBuffer('Request: ${opts.method} ${opts.uri.toString()}');
     if (opts.uri.query.isNotEmpty) sb.write('?${opts.uri.query}');
     opts.headers.forEach((k, v) => sb.write('\n  $k: $v'));
     if (opts.data != null) sb.write('\nBody:\n  ${opts.data}');
@@ -111,7 +110,6 @@ class LilaRepo {
   }
 
   void _logResponse(Response rsp) {
-    // formatted for flutter debug console
     final sb = StringBuffer('Response: ${rsp.statusCode} from ${rsp.requestOptions.path}');
     rsp.headers.forEach((k, l) => {for (var v in l) sb.write('\n  $k: $v')});
     if (rsp.data != null) sb.write('\nBody:\n  ${rsp.data}');

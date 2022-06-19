@@ -84,7 +84,6 @@ class LobbyCubit extends Cubit<LobbyState> {
   void fetchLobby() async {
     LilaResult<LobbyRsp> res = await env.lobby.fetch();
     emit(res.object != null ? SuccessLobbyState(res.object!) : ErrorLobbyState(res.message));
-    env.user.info().then((res) => {});
   }
 }
 

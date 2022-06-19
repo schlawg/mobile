@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '/services/env.dart';
 import '/services/storage.dart';
-import '/services/net/lila_repo.dart';
-import 'user_model.dart';
-import '../app/app_scaffold.dart';
+import '/app/app_scaffold.dart';
 import '/app/app.dart';
-import 'dart:convert';
-import 'package:go_router/go_router.dart';
 
+@immutable
 class LoginPage extends StatefulWidget {
-  // due to text editing controllers
-  LoginPage({Key? key}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
-// look into freezed
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final uidCtrl = TextEditingController();
   final pwdCtrl = TextEditingController();
 
@@ -35,30 +29,30 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext ctx) {
     return AppScaffold(
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 40),
         child: BlocProvider(
-          create: (_) => LoginCubit(),
-          child: BlocBuilder<LoginCubit, LoginState>(builder: _onState),
+          create: (_) => _LoginCubit(),
+          child: BlocBuilder<_LoginCubit, _LoginState>(builder: _onState),
         ),
       ),
     );
   }
 
-  Widget _onState(BuildContext ctx, LoginState state) {
-    if (state is SpinningLoginState) {
+  Widget _onState(BuildContext ctx, _LoginState state) {
+    if (state is _SpinningLoginState) {
       return const Center(
         child: CircularProgressIndicator(),
       );
-    } else if (state is EditableLoginState) {
+    } else if (state is _EditableLoginState) {
       return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         TextFormField(
-          decoration: env.thm.inputDecor(icon: Icon(Icons.person), hint: 'username'),
+          decoration: env.thm.inputDecor(icon: const Icon(Icons.person), hint: 'username'),
           maxLength: 20,
           controller: uidCtrl,
           validator: (value) => null,
         ),
         TextFormField(
-          decoration: env.thm.inputDecor(icon: Icon(Icons.security), hint: 'password'),
+          decoration: env.thm.inputDecor(icon: const Icon(Icons.security), hint: 'password'),
           obscureText: true,
           controller: pwdCtrl,
           validator: (value) => null,
@@ -67,9 +61,10 @@ class _LoginPageState extends State<LoginPage> {
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           ElevatedButton(
             onPressed: () =>
-                BlocProvider.of<LoginCubit>(ctx)._loginClicked(ctx, uidCtrl.text, pwdCtrl.text),
+                BlocProvider.of<_LoginCubit>(ctx)._loginClicked(ctx, uidCtrl.text, pwdCtrl.text),
             child: const Text('Login'),
           ),
+          const SizedBox(width: 48),
           ElevatedButton(
             onPressed: () {},
             child: const Text('Register'),
@@ -83,8 +78,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    debugPrint('dispose');
-
     env.store.secureSet(keyUserId, uidCtrl.text);
     env.store.secureSet(keyPassword, pwdCtrl.text);
 
@@ -94,16 +87,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class LoginCubit extends Cubit<LoginState> {
-  LoginCubit() : super(LoginState.initial());
+class _LoginCubit extends Cubit<_LoginState> {
+  _LoginCubit() : super(_LoginState.initial());
 
   void _loginClicked(BuildContext ctx, String username, String password) async {
-    emit(SpinningLoginState());
+    emit(_SpinningLoginState());
     env.user.login(userId: username, password: password).then((res) {
       if (res.ok) {
         ctx.go(Routes.lobby);
       } else {
-        emit(EditableLoginState(error: res.message));
+        emit(_EditableLoginState(error: res.message));
       }
     });
   }
@@ -114,14 +107,17 @@ class LoginCubit extends Cubit<LoginState> {
   }
 }
 
-abstract class LoginState {
-  const LoginState();
-  factory LoginState.initial() => const EditableLoginState();
+@immutable
+abstract class _LoginState {
+  const _LoginState();
+  factory _LoginState.initial() => const _EditableLoginState();
 }
 
-class EditableLoginState extends LoginState {
-  const EditableLoginState({this.error});
+@immutable
+class _EditableLoginState extends _LoginState {
+  const _EditableLoginState({this.error});
   final String? error;
 }
 
-class SpinningLoginState extends LoginState {}
+@immutable
+class _SpinningLoginState extends _LoginState {}
