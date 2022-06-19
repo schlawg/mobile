@@ -101,7 +101,6 @@ class LoginCubit extends Cubit<LoginState> {
     emit(SpinningLoginState());
     env.user.login(userId: username, password: password).then((res) {
       if (res.ok) {
-        //emit(EditableLoginState());
         ctx.go(Routes.lobby);
       } else {
         emit(EditableLoginState(error: res.message));
