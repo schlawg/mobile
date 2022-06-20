@@ -5,6 +5,7 @@ import '/services/env.dart';
 
 typedef RspFactory<T> = T Function(Map<String, dynamic> data);
 
+@immutable
 class LilaResult<T> {
   final int status;
   final Map<String, List<String>>? headers;
@@ -16,16 +17,15 @@ class LilaResult<T> {
   bool get ok => status >= 200 && status < 300;
 }
 
+@immutable
 class LilaRepo {
   LilaRepo() {
     _dio.options.baseUrl = env.origin;
-    _dio.options.connectTimeout = 0;
-    // dio actually triggers this on chrome-js XmlHTTPRequests long after successful
-    // transfers complete, so diable timeouts as web is probably a useful dev target
-    _dio.options.receiveTimeout = 0;
+    _dio.options.connectTimeout = 0; // dio's timeout handling is sketchy,
+    _dio.options.receiveTimeout = 0; // lichess should do its own.
     _dio.options.headers = {
-      'x-requested-with': 'XMLHttpRequest', // of course
-      'origin': 'http://locdalhost', // chrome XMLHttpRequest blocks these too
+      'x-requested-with': 'XMLHttpRequest',
+      'origin': 'http://localhost',
       'user-agent': 'lichess-mobile',
       'accept': 'application/vnd.lichess.v5+json',
     };
@@ -45,6 +45,11 @@ class LilaRepo {
 
   Future<LilaResult<T>> get<T>(String path, {RspFactory<T>? rspFactory}) async {
     return request('GET', path, rspFactory: rspFactory);
+  }
+
+  void cancel() {
+    _cancelAll.cancel('Canceled by Lichess App');
+    _cancelAll = CancelToken();
   }
 
   Future<LilaResult<T>> post<T>(
@@ -72,6 +77,7 @@ class LilaRepo {
         uri,
         options: _options(method, headers),
         data: body,
+        cancelToken: _cancelAll,
       );
       return LilaResult(
         status: rsp.statusCode!,
@@ -122,5 +128,6 @@ class LilaRepo {
     debugPrint('Error: ${err.message} ${err.stackTrace ?? ''}');
   }
 
+  var _cancelAll = CancelToken();
   final _dio = Dio();
 }

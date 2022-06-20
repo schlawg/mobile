@@ -1,5 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
-import 'login_page.dart';
+import 'package:meta/meta.dart';
 import 'user_model.dart';
 import '/services/env.dart';
 import '/services/storage.dart';
@@ -7,6 +7,7 @@ import '/services/net/lila_repo.dart';
 import 'dart:io';
 import 'dart:convert';
 
+@immutable
 class UserRepo {
   bool get loggedIn => false; //env.store.sessionId != null;
 

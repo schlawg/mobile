@@ -11,19 +11,9 @@ class LobbyPage extends StatelessWidget {
   @override
   Widget build(BuildContext ctx) {
     return AppScaffold(
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BlocProvider(
-                create: (_) => LobbyCubit(),
-                child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: SafeArea(child: OrientationBuilder(builder: (ctx, o) {
+        return o == Orientation.landscape ? _landscapeLayout(ctx) : _portraitLayout(ctx);
+      })),
     );
   }
 
@@ -41,10 +31,43 @@ class LobbyPage extends StatelessWidget {
     }
   }
 
+  Widget _landscapeLayout(BuildContext ctx) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 320, maxWidth: 380),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlocProvider(
+              create: (_) => LobbyCubit(),
+              child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _portraitLayout(BuildContext ctx) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 320, maxWidth: 380),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlocProvider(
+              create: (_) => LobbyCubit(),
+              child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _quickPairing(BuildContext ctx, SuccessLobbyState state) {
-    LobbyCubit cubit = BlocProvider.of<LobbyCubit>(ctx);
     List<Widget> buttons = [];
-    state.rsp.lobby.pools.forEach((pool) => buttons.add(_quickMatchButton(pool)));
+    state.rsp.lobby.pools.forEach((pool) => buttons.add(_quickMatchButton(ctx, pool)));
     return GridView.count(
       shrinkWrap: true,
       crossAxisCount: 3,
@@ -55,9 +78,9 @@ class LobbyPage extends StatelessWidget {
     );
   }
 
-  Widget _quickMatchButton(LobbyPool pool) {
+  Widget _quickMatchButton(BuildContext ctx, LobbyPool pool) {
     return OutlinedButton(
-      onPressed: () => {},
+      onPressed: () => BlocProvider.of<LobbyCubit>(ctx)._quickMatch(ctx, pool.id, pool.perf),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -84,6 +107,10 @@ class LobbyCubit extends Cubit<LobbyState> {
   void fetchLobby() async {
     LilaResult<LobbyRsp> res = await env.lobby.fetch();
     emit(res.object != null ? SuccessLobbyState(res.object!) : ErrorLobbyState(res.message));
+  }
+
+  void _quickMatch(BuildContext ctx, String clock, String perf) {
+    emit(LoadingLobbyState());
   }
 }
 
