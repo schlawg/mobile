@@ -22,6 +22,7 @@ dependencies:
   dio:
   path:
   rxdart:
+  flutter_svg:
   http:
   chess:
   bishop:

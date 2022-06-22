@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/services/env.dart';
@@ -32,20 +33,7 @@ class LobbyPage extends StatelessWidget {
   }
 
   Widget _landscapeLayout(BuildContext ctx) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 320, maxWidth: 380),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BlocProvider(
-              create: (_) => LobbyCubit(),
-              child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
-            ),
-          ],
-        ),
-      ),
-    );
+    return _portraitLayout(ctx);
   }
 
   Widget _portraitLayout(BuildContext ctx) {

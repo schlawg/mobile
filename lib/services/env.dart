@@ -2,9 +2,11 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:go_router/go_router.dart';
 import '/lobby/lobby_repo.dart';
 import '/user/user_repo.dart';
-import '/app/theme.dart';
+import '/theme/theme.dart';
+import '/theme/assets.dart';
 import 'storage.dart';
 import 'net/ws_repo.dart';
 import 'net/lila_repo.dart';
@@ -20,6 +22,7 @@ class Env {
   WsRepo get ws => it.get<WsRepo>();
   LilaRepo get lila => it.get<LilaRepo>();
   Theme get thm => it.get<Theme>();
+  Assets get assets => it.get<Assets>();
 
   String get origin => dotenv.env['origin'] ?? "http://localhost:9663";
   String url(String path) => p.Context(style: p.Style.url).join(origin, path);
@@ -49,6 +52,8 @@ class Env {
     it.registerSingleton<LobbyRepo>(LobbyRepo());
     it.registerSingleton<WsRepo>(WsRepo());
     it.registerSingleton<Theme>(Theme());
+    it.registerSingleton<Assets>(Assets());
     await user.init();
+    await assets.init();
   }
 }

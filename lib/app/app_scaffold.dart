@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'app_sidebar.dart';
+import 'app_drawer.dart';
+import '/services/env.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget body;
@@ -12,8 +13,11 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _AppBar(),
-      body: body,
-      drawer: const AppSidebar(),
+      body: Stack(children: [
+        Center(child: env.assets.octopus),
+        body,
+      ]),
+      drawer: const AppDrawer(),
     );
   }
 }

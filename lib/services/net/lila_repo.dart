@@ -15,6 +15,8 @@ class LilaResult<T> {
 
   String get message => body?.toString() ?? '';
   bool get ok => status >= 200 && status < 300;
+  @override
+  String toString() => '$status $message $object';
 }
 
 @immutable
