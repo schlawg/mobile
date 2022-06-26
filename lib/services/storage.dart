@@ -2,14 +2,21 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:localstorage/localstorage.dart';
 
-const keySessionId = 'sessionId';
+//const keySessionId = 'sessionId'; // not sure we need storage for this
+//const keyCookieId = 'cookie'; // this either
 const keyUserId = 'userId';
 const keyPassword = 'password';
+const keyPreferences = 'preferences';
 
 class Storage {
-  String? get sessionId => get(keySessionId);
+  /*String? get sessionId => get(keySessionId);
   set sessionId(String? sessionId) =>
       sessionId != null ? set(keySessionId, sessionId) : delete(keySessionId);
+  String? get cookie => get(keyCookieId);
+  set cookie(String? cookie) => cookie != null ? set(keyCookieId, cookie) : delete(keyCookieId);*/
+
+  String? sessionId; // notify listeners to this stuff at a higher level,
+  String? cookie; // it holds the data but storage doesn't care.
 
   String? get(String key) => _basic.get(key);
   Future<void> set(String key, String val) => _basic.set(key, val);

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '/app/app.dart';
 import '/user/login_page.dart';
-import '/services/env.dart';
+import 'env.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:go_router/go_router.dart';
 
@@ -32,7 +32,7 @@ class _AppDrawerState extends State<AppDrawer> {
       ]);
     } else {
       items.addAll([
-        _item(icon: MdiIcons.home, text: 'Home', onTap: () => context.go(Routes.lobby)),
+        _item(icon: MdiIcons.home, text: 'Home', onTap: _home),
         _item(text: 'Play online'),
         _item(icon: MdiIcons.plusCircle, text: 'Create a game', onTap: () {}),
         _item(icon: MdiIcons.trophy, text: 'Tournaments', onTap: () {}),
@@ -56,6 +56,7 @@ class _AppDrawerState extends State<AppDrawer> {
       ]);
     }
     return Drawer(
+      key: const PageStorageKey('/drawer'),
       child: Column(
         children: [
           SafeArea(
@@ -74,7 +75,7 @@ class _AppDrawerState extends State<AppDrawer> {
           Expanded(
             child: ListView(
               shrinkWrap: true,
-              children: items.toList(),
+              children: items,
             ),
           ),
         ],
@@ -115,7 +116,17 @@ class _AppDrawerState extends State<AppDrawer> {
 
   void _logout() {
     env.user.logout().then((_) {
-      context.go(Routes.lobby);
+      setState(() => inUserMenu = false);
     });
+  }
+
+  void _home() {
+    //if (GoRouter.of(context).location == Routes.lobby) {
+    //  GoRouter.of(context).pop();
+    //} else {
+    context.go(Routes.lobby);
+    context.pop();
+
+    //}
   }
 }

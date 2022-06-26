@@ -3,25 +3,22 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
 
-import '/services/env.dart';
+import '../../app/env.dart';
 
-// override path getter and onMsg, pass subclass instance to env.ws.connect()
-abstract class WsClient {
-  // override these:
-  String get path => ""; // /socket, /game, /chat, so on.
-
-  void onMsg(dynamic msg);
+mixin WsClient {
+  // these funky ws prefixed names are to avoid name collisions with mixing class
+  String get wsPath;
+  void onWsMsg(Map<String, dynamic> msg);
 
   // optional overrides
-  void onErr(Object err, StackTrace trace) {}
+  void onWsErr(Object err, StackTrace trace) {}
+  void onWsDone() {}
 
-  void onDone() {}
+  @mustCallSuper
+  void wsSend(dynamic msg) => env.ws.send(this, msg);
 
-  // send is for calling, not for overriding
-  void send(dynamic msg) => env.ws.send(this, msg);
-
-  // it is critical to always call close when you're done, otherwise you leak.
-  void close() => env.ws.close(this);
+  @mustCallSuper
+  void wsClose() => env.ws.close(this);
 }
 
 /*

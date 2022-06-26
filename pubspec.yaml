@@ -18,10 +18,10 @@ dependencies:
   freezed_annotation:
   device_info_plus: ^3.2.4
   meta:
-  rest_client:
+#  rest_client:
   dio:
   path:
-  rxdart:
+#  rxdart:
   flutter_svg:
   http:
   chess:
@@ -31,6 +31,7 @@ dependencies:
   shared_preferences:
   get_it:
   go_router:
+  provider:
   json_annotation: ^4.5.0
 #  localstorage:
   material_design_icons_flutter:
@@ -60,3 +61,13 @@ flutter:
     - assets/conf/
     # Add assets from the images directory to the application.
     - assets/images/
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Light.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf

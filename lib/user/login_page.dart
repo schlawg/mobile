@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '/services/env.dart';
+import '/app/env.dart';
 import '/services/storage.dart';
 import '/app/app_scaffold.dart';
 import '/app/app.dart';
+import '/app/ui.dart';
 
 @immutable
 class LoginPage extends StatefulWidget {
@@ -15,14 +16,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
-  final uidCtrl = TextEditingController();
-  final pwdCtrl = TextEditingController();
-
+  final _uidCtrl = TextEditingController();
+  final _pwdCtrl = TextEditingController();
   @override
   void initState() {
     super.initState();
-    env.store.secureGet(keyUserId).then((uid) => uidCtrl.text = uid ?? '');
-    env.store.secureGet(keyPassword).then((pwd) => pwdCtrl.text = pwd ?? '');
+    env.store.secureGet(keyUserId).then((uid) => _uidCtrl.text = uid ?? '');
+    env.store.secureGet(keyPassword).then((pwd) => _pwdCtrl.text = pwd ?? '');
   }
 
   @override
@@ -38,51 +38,58 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _onState(BuildContext ctx, _LoginState state) {
+  Widget _onState(BuildContext context, _LoginState state) {
     if (state is _SpinningLoginState) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     } else if (state is _EditableLoginState) {
-      return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        TextFormField(
-          decoration: env.thm.inputDecor(icon: const Icon(Icons.person), hint: 'username'),
-          maxLength: 20,
-          controller: uidCtrl,
-          validator: (value) => null,
-        ),
-        TextFormField(
-          decoration: env.thm.inputDecor(icon: const Icon(Icons.security), hint: 'password'),
-          obscureText: true,
-          controller: pwdCtrl,
-          validator: (value) => null,
-        ),
-        SizedBox(height: 60, child: Text(state.error ?? '')),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          ElevatedButton(
-            onPressed: () =>
-                BlocProvider.of<_LoginCubit>(ctx)._loginClicked(ctx, uidCtrl.text, pwdCtrl.text),
-            child: const Text('Login'),
+      return ConstrainedWidthColumn(
+        [
+          TextField(
+            decoration: const InputDecoration(icon: Icon(Icons.person), hintText: 'username'),
+            autocorrect: false,
+            maxLength: 20,
+            autofocus: true,
+            controller: _uidCtrl,
           ),
-          const SizedBox(width: 48),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Register'),
-          )
-        ])
-      ]);
+          TextField(
+            decoration: const InputDecoration(icon: Icon(Icons.security), hintText: 'password'),
+            obscureText: true,
+            controller: _pwdCtrl,
+          ),
+          SizedBox(height: 60, child: Text(state.error ?? '')),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            TextButton(
+              onPressed: () => context.go(Routes.register),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                child: Text('REGISTER', style: UI.size22),
+              ),
+            ),
+            TextButton(
+              onPressed: () => BlocProvider.of<_LoginCubit>(context)
+                  ._loginClicked(context, _uidCtrl.text, _pwdCtrl.text),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                child: Text('LOGIN', style: UI.size22),
+              ),
+            ),
+          ])
+        ],
+      );
     } else {
-      return Container(); // no idea why we need this, there are no other subclasses
+      return Container();
     }
   }
 
   @override
   void dispose() {
-    env.store.secureSet(keyUserId, uidCtrl.text);
-    env.store.secureSet(keyPassword, pwdCtrl.text);
+    env.store.secureSet(keyUserId, _uidCtrl.text);
+    env.store.secureSet(keyPassword, _pwdCtrl.text);
 
-    uidCtrl.dispose();
-    pwdCtrl.dispose();
+    _uidCtrl.dispose();
+    _pwdCtrl.dispose();
     super.dispose();
   }
 }

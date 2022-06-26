@@ -5,13 +5,19 @@ import 'app_drawer.dart';
 import 'app_scaffold.dart';
 import '/user/login_page.dart';
 import '/user/profile_page.dart';
+import '/user/prefs_page.dart';
+import '/user/register_page.dart';
 import '/lobby/lobby_page.dart';
-import '/services/env.dart';
+import 'env.dart';
+import 'ui.dart';
 
 class Routes {
   static const lobby = '/';
   static const login = '/login';
   static const profile = '/profile';
+  static const register = '/register';
+  static const prefs = '/prefs';
+  static const game = '/:gameId';
 }
 
 class LichessApp extends StatelessWidget {
@@ -25,7 +31,7 @@ class LichessApp extends StatelessWidget {
     return MaterialApp.router(
       key: _appKey,
       title: 'Lichess',
-      theme: env.thm.td,
+      theme: UI.theme,
       routeInformationProvider: _router.routeInformationProvider,
       routeInformationParser: _router.routeInformationParser,
       routerDelegate: _router.routerDelegate,
@@ -38,19 +44,25 @@ GoRouter _buildRouter() {
     urlPathStrategy: UrlPathStrategy.path,
     initialLocation: Routes.lobby,
     routes: [
-      GoRoute(path: Routes.lobby, builder: (__, _) => LobbyPage()),
-      GoRoute(path: Routes.login, builder: (__, _) => LoginPage()),
+      GoRoute(path: Routes.lobby, builder: (ctx, state) => const LobbyPage()),
+      GoRoute(path: Routes.login, builder: (__, _) => const LoginPage()),
+      GoRoute(path: Routes.register, builder: (__, _) => const RegisterPage()),
+      GoRoute(path: Routes.prefs, builder: (__, _) => const RegisterPage()),
       GoRoute(path: Routes.profile, builder: (__, state) => ProfilePage(state.queryParams['uid'])),
+      GoRoute(path: Routes.game, builder: (ctx, state) => _gameUrl(ctx, state)),
     ],
     redirect: (state) {
-      if (!env.user.loggedIn && false) {
-        // check if route needs auth
-        return Routes.login;
-      }
-
-      if (env.user.loggedIn && state.subloc == Routes.login) return Routes.lobby;
-
       return null;
     },
   );
+}
+
+Widget _gameUrl(BuildContext ctx, GoRouterState state) {
+  final gameId = state.params['gameId'];
+  if (gameId != null) {
+    debugPrint('woohoo! $gameId');
+    return Container();
+  } else {
+    return const LobbyPage();
+  }
 }

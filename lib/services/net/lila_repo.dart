@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import '/services/env.dart';
+import '/app/env.dart';
 
 typedef RspFactory<T> = T Function(Map<String, dynamic> data);
 

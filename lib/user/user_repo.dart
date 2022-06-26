@@ -1,13 +1,8 @@
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:flutter/foundation.dart';
-import 'package:meta/meta.dart';
 import 'user_model.dart';
-import '/services/env.dart';
+import '/app/env.dart';
 import '/services/storage.dart';
 import '/services/net/lila_repo.dart';
-import 'dart:io';
-import 'dart:convert';
 
 /*@immutable
 class UserSession {
@@ -17,8 +12,9 @@ class UserSession {
   });
 }*/
 
-class UserRepo {
+class UserRepo extends ChangeNotifier {
   User? me;
+  final sessionIdRegex = RegExp(r'sessionId=([A-Za-z0-9+/]{6,})');
 
   bool get loggedIn => me != null;
 
@@ -26,7 +22,7 @@ class UserRepo {
     // this is temporary, don't want to block startup trying to connect
     if (await env.lila.online()) {
       // we have networking
-      login(userId: 'li', password: 'password');
+      //login(userId: 'li', password: 'password');
     }
   }
 
@@ -51,18 +47,18 @@ class UserRepo {
     );
     if (userResult.object?.sessionId != null) {
       env.store.sessionId = userResult.object?.sessionId!;
-    } else if (userResult.headers != null) {
-      env.store.sessionId = RegExp(r'sessionId=([A-Za-z0-9+/]{6,})')
-          .firstMatch(userResult.headers!['set-cookie']?.first ?? '')
-          ?.group(1);
     } else {
       _clearSession();
       return userResult;
     }
-    // let's get the full monty
+    if (userResult.headers != null) {
+      env.store.cookie = userResult.headers!['set-cookie']?.first;
+    }
+    // let's get it all
     final acctResult = (await env.lila.get('/account/info', rspFactory: User.fromJson));
     if (acctResult.ok) {
       me = acctResult.object;
+      notifyListeners();
     } else {
       debugPrint(acctResult.toString());
     }
@@ -72,24 +68,14 @@ class UserRepo {
   Future<LilaResult> logout() async {
     final result = me != null ? await env.lila.post('/logout') : const LilaResult(status: 200);
     _clearSession();
+    notifyListeners();
     return result;
   }
 
   void _clearSession() {
     me = null;
+    env.store.cookie = null;
     env.store.sessionId = null;
-  }
-}
-
-Future<String?> _getId() async {
-  var deviceInfo = DeviceInfoPlugin();
-  if (Platform.isIOS) {
-    var iosDeviceInfo = await deviceInfo.iosInfo;
-    return iosDeviceInfo.identifierForVendor;
-  } else if (Platform.isAndroid) {
-    var androidDeviceInfo = await deviceInfo.androidInfo;
-    return androidDeviceInfo.androidId;
-  } else {
-    return 'chrome-blah-blah';
+    // shut down ws connections
   }
 }

@@ -27,6 +27,7 @@ class User with _$User {
 class UserProfile with _$UserProfile {
   const factory UserProfile({
     required String? location,
+    required String? country,
     required String? bio,
     required String? firstName,
     required String? lastName,

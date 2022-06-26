@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '/services/env.dart';
+import '../app/env.dart';
 import '/services/storage.dart';
 import '/app/app_scaffold.dart';
 import '/app/app.dart';
@@ -33,24 +33,34 @@ class ProfilePage extends StatelessWidget {
       );
     } else if (state is _LoadedProfileState) {
       User u = state.user;
+      // this crap is just a placeholder, will want to use RichText widget, flag icon, etc.
       // TODO: if u == env.user.me, allow editing
       return Column(mainAxisAlignment: MainAxisAlignment.start, children: [
         Text(MediaQuery.of(ctx).size.toString()),
+        SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text('First name: ${u.profile?.firstName}'),
-            //const SizedBox(width: 48),
             Text('Last name: ${u.profile?.lastName}'),
           ],
         ),
-        SizedBox(height: 60),
+        SizedBox(height: 20),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const SizedBox(width: 48),
+            Text('Country: ${u.profile?.country}'),
+            Text('Location: ${u.profile?.location}'),
           ],
-        )
+        ),
+        SizedBox(height: 20),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text('Bio: ${u.profile?.firstName}'),
+          ],
+        ),
+        SizedBox(height: 20),
       ]);
     } else {
       return Center(child: Text((state as _ErrorProfileState).error));
