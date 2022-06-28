@@ -3,27 +3,29 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:io';
 
-import '../../app/app_state_observer.dart';
-import '../../app/env.dart';
+import '/app/app.dart';
+import '/app/env.dart';
 import 'ws_client.dart';
 
 // WsRepo restores client connections transparently
 // across app suspend/resumes, connection fails, retries, etc.
-// handles ping/pong shite and little else.
-class WsRepo extends AppStateObserver {
-  WsRepo() : super();
-
+// handles ping/pong shite, app events, and little else.
+class WsRepo {
+  WsRepo();
+  late final AppStateBinding _appState;
   final Map<WsClient, _ClientData> _clients = {};
 
   void init() {
-    env.user.addListener(_loginStateChanged);
+    env.user.addListener(_onSessionChanged);
+    _appState = AppStateBinding(_connectAll, _closeAll);
+    debugPrint(_appState.toString()); // make _appState isn't used nag go away
   }
 
   Future<void> connect<T extends WsClient>(T client) async {
-    if (_clients.containsKey(client)) close(client);
+    if (_clients.containsKey(client)) close(client); // ?
     final sri = _makeSri();
-    // WsClient subclass might specify its own query params in wsPath getter, use joinPath
-    final url = env.joinPath(env.wsUrl(client.wsPath), '?sri=$sri');
+    // could a client provide query params in wsPath getter?  use joinPath just in case
+    final url = Env.joinPath(env.wsUrl(client.wsPath), '?sri=$sri');
     final ws = await WebSocket.connect(
       url,
       headers: {'cookie': env.store.cookie},
@@ -41,34 +43,30 @@ class WsRepo extends AppStateObserver {
   }
 
   void close(WsClient client) /* async */ {
-    WebSocket? ws = _clients[client]?.sock;
+    int state = _clients[client]?.sock.readyState ?? WebSocket.closed;
+    if (state != WebSocket.closed && state != WebSocket.closing) {
+      _clients[client]?.sock.close().catchError((_) {}); // TODO close code, reason?
+    }
+  }
+
+  void remove(WsClient client) /* async */ {
+    close(client);
     _clients.remove(client);
-    /* await */ ws?.close().catchError((_) {}); // TODO close code, reason?
   }
 
-  @override
-  Future<void> suspend() async {
-    _clients.forEach((client, cdata) {
-      try {
-        cdata.sock.close().catchError((_) {});
-      } catch (_) {}
-    });
+  void _closeAll() {
+    debugPrint("_closeAll");
+    for (final client in _clients.keys) {
+      close(client);
+    }
   }
 
-  @override
-  Future<void> resume() async {
+  void _connectAll() {
+    debugPrint("_connectAll");
     // connect modifies _clients map so copy keys first
     for (final client in List.of(_clients.keys)) {
       connect(client);
     }
-  }
-
-  void _clear() {
-    // connect modifies _clients map so copy keys first
-    for (final client in List.of(_clients.keys)) {
-      close(client);
-    }
-    _clients.clear();
   }
 
   void _onMsg(WsClient client, dynamic msg) {
@@ -94,9 +92,11 @@ class WsRepo extends AppStateObserver {
     client.onWsErr(err, trace);
   }
 
-  void _loginStateChanged() {
+  void _onSessionChanged() {
     if (!env.user.loggedIn) {
-      _clear();
+      _closeAll();
+    } else {
+      _connectAll();
     }
   }
 
@@ -104,15 +104,6 @@ class WsRepo extends AppStateObserver {
     debugPrint("sending pong...");
     cdata.sock.add('{"t":"p"}');
   }
-
-/*  
-  void pingAll() {
-    // keep it simple for now
-    for (final client in List.of(_clients.keys)) {
-      send(client, '{"t":"p"}');
-    }
-  }
-  */
 }
 
 class _ClientData {

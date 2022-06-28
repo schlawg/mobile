@@ -1,42 +1,50 @@
-import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile/app/env.dart';
-import 'package:mobile/services/net/lila_repo.dart';
 import 'lobby_model.dart';
-import '/services/net/ws_client.dart';
+import '/user/user_repo.dart';
+import '/services/net/lila_repo.dart';
+import 'lobby_cubit.dart';
 import '/app/app_scaffold.dart';
 import '/app/ui.dart';
 
-// at standard zoom, basic layout strategy counts the number of "views" with
-// width of a board or a board sized view such as chat or move list - essentially
-// the number of logical pixels in a smallish phone's screen width), and
-// decide how many of those views it can fit horizontally given the current
-// orientation.  Each page element also has a bias (focus bias wants to be
-// horizontally centered but prefers left over right when compared to another element)
-// and a priority, which roughly determines overall list order from left to right,
-// then next row, then next.  priority can be overruled by focus bias on a given row.
-// The elements are then rendered in their assigned grid squares by the page container
-// in such a way as to favor balance, i.e. 2/2 (a 2x2 grid square with horizontal padding) is
-// preferable to 3/1 (a 3x2 grid square with only 1 element on the 2nd row).  zooming focuses
-// on subgrids, max zoom is 1x1 like fullscreen board view.
-// probably will turn out terrible but lets go with it for now.
+/* 
+ at standard zoom, basic layout strategy counts the number of "views" with
+ width of a board or a board sized view such as chat or move list - essentially
+ the number of logical pixels in a smallish phone's screen width), and
+ decide how many of those views it can fit horizontally given the current
+ orientation.  Each page element also has a bias (focus bias wants to be
+ horizontally centered but prefers text direction when compared to another element)
+ and a priority, which roughly determines overall list order from left to right,
+ then next row, then next.  priority can be overruled by focus bias on a given row.
+ The elements are then rendered in their assigned grid squares by the page container
+ in such a way as to favor balance, i.e. 2/2 (a 2x2 grid square with horizontal padding) is
+ preferable to 3/1 (a 3x2 grid square with only 1 element on the 2nd row).  zooming focuses
+ on subgrids, max zoom is 1x1 like fullscreen board view.
+ probably will turn out terrible but lets go with it for now.
+*/
+
 class LobbyPage extends StatelessWidget {
   const LobbyPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      body: SafeArea(child: OrientationBuilder(builder: (context, o) {
-        return o == Orientation.landscape ? _landscapeLayout(context) : _portraitLayout(context);
-      })),
+//      body: SafeArea(child: OrientationBuilder(builder: (context, o) {
+//        return o == Orientation.landscape ? _landscapeLayout(context) : _portraitLayout(context);
+      body: ConstrainedWidthColumn(
+        [
+          BlocProvider(
+            create: (_) => LobbyCubit(context.watch<UserRepo>(), context.read<LilaRepo>()),
+            child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _onState(BuildContext ctx, LobbyState state) {
+  Widget _onState(BuildContext context, LobbyState state) {
     if (state is SuccessLobbyState) {
-      return _quickPairing(ctx, state);
+      return _quickPairing(context, state);
     } else if (state is LoadingLobbyState) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -48,27 +56,20 @@ class LobbyPage extends StatelessWidget {
     }
   }
 
-  Widget _landscapeLayout(BuildContext ctx) {
-    return _portraitLayout(ctx);
+  Widget _landscapeLayout(BuildContext context) {
+    return _portraitLayout(context);
   }
 
-  Widget _portraitLayout(BuildContext ctx) {
-    return ConstrainedWidthColumn(
-      [
-        BlocProvider(
-          create: (_) => LobbyCubit(),
-          child: BlocBuilder<LobbyCubit, LobbyState>(builder: _onState),
-        ),
-      ],
-    );
+  Widget _portraitLayout(BuildContext context) {
+    return Container();
   }
 
-  Widget _oppoGameList(BuildContext ctx) {
+  Widget _oppoGameList(BuildContext context) {
     return ListView();
   }
 
   Widget _oppoGame(
-    BuildContext ctx, {
+    BuildContext context, {
     required String creator,
     required String color,
     required String timeControl,
@@ -91,9 +92,9 @@ class LobbyPage extends StatelessWidget {
     );
   }
 
-  Widget _quickMatchButton(BuildContext ctx, LobbyPool pool) {
+  Widget _quickMatchButton(BuildContext context, LobbyPool pool) {
     return OutlinedButton(
-      onPressed: () => BlocProvider.of<LobbyCubit>(ctx)._quickMatch(ctx, pool.id, pool.perf),
+      onPressed: () => BlocProvider.of<LobbyCubit>(context).quickMatch(context, pool.id, pool.perf),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -111,62 +112,4 @@ class LobbyPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class LobbyCubit extends Cubit<LobbyState> with WsClient {
-  LobbyCubit() : super(LobbyState.initial()) {
-    env.user.addListener(_onSession);
-    fetchLobby();
-  }
-  @override
-  get wsPath => "/lobby/socket";
-
-  @override
-  void onWsMsg(Map<String, dynamic> msg) {
-    debugPrint(json.encode(msg));
-  }
-
-  void fetchLobby() async {
-    final res = await env.lobby.fetch();
-    emit(res.object != null ? SuccessLobbyState(res.object!) : ErrorLobbyState(res.message));
-  }
-
-  void _quickMatch(BuildContext ctx, String clock, String perf) {
-    emit(LoadingLobbyState());
-  }
-
-  void _onSession() {
-    if (env.user.loggedIn) {
-      debugPrint('gogogogogogogogogogogo ${env.wsOrigin}');
-      env.ws.connect(this).then((_) {
-        wsSend({'t': 'following_onlines'});
-      });
-    } else {
-      debugPrint('oh noes mr bill');
-    }
-  }
-
-  @override
-  Future<void> close() async {
-    env.user.removeListener(_onSession);
-    super.close();
-  }
-}
-
-abstract class LobbyState {
-  const LobbyState();
-  factory LobbyState.initial() => LoadingLobbyState();
-}
-
-class LoadingLobbyState extends LobbyState {}
-
-class ErrorLobbyState extends LobbyState {
-  const ErrorLobbyState(this.error);
-  final String error;
-}
-
-class SuccessLobbyState extends LobbyState {
-  final LobbyRsp rsp;
-
-  const SuccessLobbyState(this.rsp);
 }

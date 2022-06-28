@@ -15,10 +15,13 @@ mixin WsClient {
   void onWsDone() {}
 
   @mustCallSuper
+  Future<void> wsConnect() => env.ws.connect(this);
+
+  @mustCallSuper
   void wsSend(dynamic msg) => env.ws.send(this, msg);
 
   @mustCallSuper
-  void wsClose() => env.ws.close(this);
+  void wsClose() => env.ws.remove(this);
 }
 
 /*

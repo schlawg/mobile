@@ -3,7 +3,6 @@ import 'package:get_it/get_it.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import '/lobby/lobby_repo.dart';
 import '/user/user_repo.dart';
 import '/services/storage.dart';
 import '/services/net/ws_repo.dart';
@@ -15,10 +14,13 @@ final env = Env();
 
 // group home for services, repos, and singletons
 //
-// it is OK for something in the UI build tree to reach INTO env and access
-// a service related instance, it is NOT OK for anything below to initiate
-// that conversation without doing it via provided callback or provider lookup.
-// also, consolidate all get_it usage here if possible, otherwise use provider.
+// Surely it is OK for something in the UI build tree to reach INTO env and access
+// a service/repo related instance with no state-modifying side effects, although I do
+// believe that sidestepping Provider is considered a crime against flutter in most
+// UN member countries.
+//
+// Use the providers injected in main.dart rather than env when you can, I guess.
+// storage, lilarepo, wsrepo, assets, userrepo, all available via provider.
 
 class Env {
   int get nowMillis => DateTime.now().millisecondsSinceEpoch;
@@ -26,7 +28,6 @@ class Env {
   //UI get ui => it.get<UI>();
   Storage get store => it.get<Storage>();
   UserRepo get user => it.get<UserRepo>();
-  LobbyRepo get lobby => it.get<LobbyRepo>();
   WsRepo get ws => it.get<WsRepo>();
   LilaRepo get lila => it.get<LilaRepo>();
   Assets get assets => it.get<Assets>();
@@ -38,10 +39,7 @@ class Env {
 
   String? getVar(String variable) => dotenv.env[variable];
 
-  // this helper lives inside the class to make its location within the source tree
-  // explicit to any calling code.  instantly recognize env.joinPath but where
-  // does joinPath come from?
-  String joinPath(String p1, String p2) {
+  static String joinPath(String p1, String p2) {
     final base = Uri.parse(p1); // safely join p2 to p1, merging any query params
     final rhs = Uri.parse(p2);
     return base.replace(
@@ -71,7 +69,6 @@ class Env {
     //it.registerSingleton<UI>(UI());
     it.registerSingleton<LilaRepo>(LilaRepo());
     it.registerSingleton<UserRepo>(UserRepo());
-    it.registerSingleton<LobbyRepo>(LobbyRepo());
     it.registerSingleton<WsRepo>(WsRepo());
     it.registerSingleton<Assets>(Assets());
     await user.init();

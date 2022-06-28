@@ -39,6 +39,33 @@ class LichessApp extends StatelessWidget {
   }
 }
 
+class AppStateBinding extends WidgetsBindingObserver {
+  AppStateBinding(this._resume, this._suspend) {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  final Function _resume;
+  final Function _suspend;
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _resume();
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _suspend();
+        break;
+    }
+  }
+}
+
 GoRouter _buildRouter() {
   return GoRouter(
     urlPathStrategy: UrlPathStrategy.path,

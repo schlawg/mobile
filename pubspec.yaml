@@ -14,28 +14,26 @@ dependencies:
   flutter_appauth:
   flutter_dotenv:
   flutter_bloc:
+  logger:
+  material_design_icons_flutter:
+  cupertino_icons:
   flutter_secure_storage:
-  freezed_annotation:
-  device_info_plus: ^3.2.4
-  meta:
-#  rest_client:
-  dio:
-  path:
-#  rxdart:
   flutter_svg:
-  http:
-  chess:
-  bishop:
-  chessground: 
-    path: '../flutter_chessground'
+  device_info_plus: #^3.2.4
+  meta:
+  dio:
   shared_preferences:
   get_it:
   go_router:
   provider:
+  freezed_annotation:
   json_annotation: ^4.5.0
 #  localstorage:
-  material_design_icons_flutter:
-  cupertino_icons:
+
+  chess:
+  bishop:
+  chessground: 
+    path: '../flutter_chessground'
 
 dev_dependencies:
   integration_test:
@@ -43,12 +41,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner:
-  freezed:
-
-#  copy_with_extension:
-
-#  copy_with_extension_gen:
   flutter_lints:
+  freezed:
   json_serializable:
 
 flutter:
@@ -59,7 +53,6 @@ flutter:
 
   assets:
     - assets/conf/
-    # Add assets from the images directory to the application.
     - assets/images/
   fonts:
     - family: Roboto
