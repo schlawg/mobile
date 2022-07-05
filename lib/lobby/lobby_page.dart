@@ -44,24 +44,18 @@ class LobbyPage extends StatelessWidget {
 
   Widget _onState(BuildContext context, LobbyState state) {
     if (state is SuccessLobbyState) {
-      return _quickPairing(context, state);
+      return _mainView(context, state);
     } else if (state is LoadingLobbyState) {
       return const Center(
         child: CircularProgressIndicator(),
       );
-    } else {
+    } else if (state is ErrorLobbyState) {
       return Center(
-        child: Text((state as ErrorLobbyState).error),
+        child: Text(state.error),
       );
+    } else {
+      return Container();
     }
-  }
-
-  Widget _landscapeLayout(BuildContext context) {
-    return _portraitLayout(context);
-  }
-
-  Widget _portraitLayout(BuildContext context) {
-    return Container();
   }
 
   Widget _oppoGameList(BuildContext context) {
@@ -79,9 +73,20 @@ class LobbyPage extends StatelessWidget {
     return Row();
   }
 
-  Widget _quickPairing(BuildContext ctx, SuccessLobbyState state) {
+  Widget _mainView(BuildContext context, SuccessLobbyState state) {
+    return ConstrainedWidthColumn([
+      _quickPairing(context, state),
+      const SizedBox(height: 32),
+      TextButton(
+        onPressed: () => context.read<LobbyCubit>().playWithFriend,
+        child: const Text("Play with a friend", style: UI.size22, textAlign: TextAlign.center),
+      ),
+    ]);
+  }
+
+  Widget _quickPairing(BuildContext context, SuccessLobbyState state) {
     List<Widget> buttons = [];
-    state.rsp.lobby.pools.forEach((pool) => buttons.add(_quickMatchButton(ctx, pool)));
+    state.rsp.lobby.pools.forEach((pool) => buttons.add(_quickMatchButton(context, pool)));
     return GridView.count(
       shrinkWrap: true,
       crossAxisCount: 3,
@@ -94,7 +99,7 @@ class LobbyPage extends StatelessWidget {
 
   Widget _quickMatchButton(BuildContext context, LobbyPool pool) {
     return OutlinedButton(
-      onPressed: () => BlocProvider.of<LobbyCubit>(context).quickMatch(context, pool.id, pool.perf),
+      onPressed: () => context.read<LobbyCubit>().quickMatch(context, pool.id, pool.perf),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

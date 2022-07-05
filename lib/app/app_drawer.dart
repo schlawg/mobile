@@ -34,7 +34,10 @@ class _AppDrawerState extends State<AppDrawer> {
       items.addAll([
         _item(icon: MdiIcons.home, text: 'Home', onTap: _home),
         _item(text: 'Play online'),
-        _item(icon: MdiIcons.plusCircle, text: 'Create a game', onTap: () {}),
+        _item(
+            icon: MdiIcons.plusCircle,
+            text: 'Create a game',
+            onTap: () => context.go(Routes.webview)),
         _item(icon: MdiIcons.trophy, text: 'Tournaments', onTap: () {}),
         _item(text: 'Learn'),
         _item(icon: MdiIcons.target, text: 'Puzzles', onTap: () {}),
@@ -125,7 +128,7 @@ class _AppDrawerState extends State<AppDrawer> {
     //  GoRouter.of(context).pop();
     //} else {
     context.go(Routes.lobby);
-    context.pop();
+    //context.pop();
 
     //}
   }

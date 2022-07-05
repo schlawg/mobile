@@ -45,8 +45,8 @@ class LilaRepo {
     return (await request('OPTIONS', '/')).ok;
   }
 
-  Future<LilaResult<T>> get<T>(String path, {RspFactory<T>? rspFactory}) async {
-    return request('GET', path, rspFactory: rspFactory);
+  Future<LilaResult<T>> get<T>(String path, {RspFactory<T>? as}) async {
+    return request('GET', path, as: as);
   }
 
   void cancel() {
@@ -57,9 +57,9 @@ class LilaRepo {
   Future<LilaResult<T>> post<T>(
     String path, {
     Map<String, dynamic>? body,
-    RspFactory<T>? rspFactory,
+    RspFactory<T>? as,
   }) async {
-    return request('POST', path, body: body, rspFactory: rspFactory);
+    return request('POST', path, body: body, as: as);
   }
 
   Future<LilaResult<T>> request<T>(
@@ -68,7 +68,7 @@ class LilaRepo {
     Map<String, dynamic>? urlParams,
     Map<String, dynamic>? headers,
     dynamic body,
-    RspFactory<T>? rspFactory,
+    RspFactory<T>? as,
     bool useForm = true,
   }) async {
     Uri uri = Uri.parse(env.url(path)).replace(queryParameters: urlParams);
@@ -81,10 +81,13 @@ class LilaRepo {
         data: body,
         cancelToken: _cancelAll,
       );
+      final cookie = rsp.headers['set-cookie']?.first;
+      if (cookie != null) env.store.cookie = cookie;
+
       return LilaResult(
         status: rsp.statusCode!,
-        object: rspFactory?.call(rsp.data),
-        body: rspFactory == null ? rsp.data : null,
+        object: as?.call(rsp.data),
+        body: as == null ? rsp.data : null,
         headers: rsp.headers.map,
       );
     } on DioError catch (e) {

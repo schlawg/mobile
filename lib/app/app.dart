@@ -9,6 +9,7 @@ import '/user/prefs_page.dart';
 import '/user/register_page.dart';
 import '/lobby/lobby_page.dart';
 import 'env.dart';
+import 'webview_page.dart';
 import 'ui.dart';
 
 class Routes {
@@ -17,6 +18,7 @@ class Routes {
   static const profile = '/profile';
   static const register = '/register';
   static const prefs = '/prefs';
+  static const webview = '/webview';
   static const game = '/:gameId';
 }
 
@@ -74,7 +76,8 @@ GoRouter _buildRouter() {
       GoRoute(path: Routes.lobby, builder: (ctx, state) => const LobbyPage()),
       GoRoute(path: Routes.login, builder: (__, _) => const LoginPage()),
       GoRoute(path: Routes.register, builder: (__, _) => const RegisterPage()),
-      GoRoute(path: Routes.prefs, builder: (__, _) => const RegisterPage()),
+      GoRoute(path: Routes.prefs, builder: (__, _) => const PrefsPage()),
+      GoRoute(path: Routes.webview, builder: (__, _) => const WebViewPage()),
       GoRoute(path: Routes.profile, builder: (__, state) => ProfilePage(state.queryParams['uid'])),
       GoRoute(path: Routes.game, builder: (ctx, state) => _gameUrl(ctx, state)),
     ],

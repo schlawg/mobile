@@ -1,27 +1,45 @@
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
-import 'dart:math';
-import 'dart:io';
 
 import '../../app/env.dart';
 
-mixin WsClient {
-  // these funky ws prefixed names are to avoid name collisions with mixing class
-  String get wsPath;
-  void onWsMsg(Map<String, dynamic> msg);
+const String oPeriodicMillis = 'intervalMillis';
+const String oPeriodicId = 'periodicId';
+const String oRetry = 'retry';
 
-  // optional overrides
+mixin WsClient {
+  final Map<String, Function> _wsHandlers = {};
+
+  // these funky wsNames are to avoid name collisions with mixing class
+
+  // clients need to implement wsPath getter and add handlers or override onWsMsg
+  String get wsPath;
+
+  // optional overrides:
+
+  void onWsMsg(Map<String, dynamic> msg) {}
   void onWsErr(Object err, StackTrace trace) {}
   void onWsDone() {}
 
-  @mustCallSuper
+  @nonVirtual
+  void addWsHandlers(Map<String, Function> handlers) {
+    _wsHandlers.addAll(handlers);
+  }
+
+  @nonVirtual
+  void wsSend({String? t, Map<String, dynamic>? d, Map<String, dynamic>? o}) =>
+      env.ws.send(this, t, d, o);
+
+  // probably don't need to worry about connect, close, or dispatch
+  @nonVirtual
   Future<void> wsConnect() => env.ws.connect(this);
 
-  @mustCallSuper
-  void wsSend(dynamic msg) => env.ws.send(this, msg);
-
-  @mustCallSuper
+  @nonVirtual
   void wsClose() => env.ws.remove(this);
+
+  @nonVirtual
+  bool wsHandleMsg(String type, Map<String, dynamic> data) {
+    return _wsHandlers[type]?.call(data) != null;
+  }
 }
 
 /*

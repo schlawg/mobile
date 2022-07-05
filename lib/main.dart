@@ -10,6 +10,9 @@ import 'app/assets.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /*if (Platform.isAndroid) {
+    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+  }*/
   await env.init();
 
   runApp(MultiProvider(

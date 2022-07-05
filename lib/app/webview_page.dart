@@ -2,29 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
-import 'user_model.dart';
 import '/app/env.dart';
 import '/services/storage.dart';
 
-class PrefsPage extends StatefulWidget {
-  const PrefsPage({Key? key}) : super(key: key);
+class WebViewPage extends StatefulWidget {
+  const WebViewPage({Key? key}) : super(key: key);
   @override
-  PrefsPageState createState() => PrefsPageState();
+  _WebViewPageState createState() => _WebViewPageState();
 }
 
-class PrefsPageState extends State<PrefsPage> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
-class _MyAppState extends State<PrefsPage> {
+class _WebViewPageState extends State<WebViewPage> {
   final GlobalKey webViewKey = GlobalKey();
 
   InAppWebViewController? webViewController;

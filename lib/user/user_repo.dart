@@ -4,14 +4,6 @@ import '/app/env.dart';
 import '/services/storage.dart';
 import '/services/net/lila_repo.dart';
 
-/*@immutable
-class UserSession {
-  const UserSession({
-    required String sid,
-    required User me,
-  });
-}*/
-
 class UserRepo extends ChangeNotifier {
   User? me;
   final sessionIdRegex = RegExp(r'sessionId=([A-Za-z0-9+/]{6,})');
@@ -27,7 +19,7 @@ class UserRepo extends ChangeNotifier {
   }
 
   Future<LilaResult<User>> getUser(String userId) async {
-    return await env.lila.get('/api/user/$userId', rspFactory: User.fromJson);
+    return await env.lila.get('/api/user/$userId', as: User.fromJson);
   }
 
   Future<LilaResult<User>> login({String? userId, String? password}) async {
@@ -43,7 +35,7 @@ class UserRepo extends ChangeNotifier {
         'username': userId.toLowerCase(),
         'password': password,
       },
-      rspFactory: User.fromJson,
+      as: User.fromJson,
     );
     if (userResult.object?.sessionId != null) {
       env.store.sessionId = userResult.object?.sessionId!;
@@ -51,13 +43,11 @@ class UserRepo extends ChangeNotifier {
       _clearSession();
       return userResult;
     }
-    if (userResult.headers != null) {
-      env.store.cookie = userResult.headers!['set-cookie']?.first;
-    }
     // let's get it all
-    final acctResult = (await env.lila.get('/account/info', rspFactory: User.fromJson));
+    final acctResult = (await env.lila.get('/account/info', as: User.fromJson));
     if (acctResult.ok) {
       me = acctResult.object;
+      await env.lila.post('/auth/set-fp/${await env.deviceId}/0');
       notifyListeners();
     } else {
       debugPrint(acctResult.toString());

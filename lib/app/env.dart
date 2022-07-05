@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
+import 'dart:convert';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
@@ -12,19 +15,17 @@ import 'assets.dart';
 
 final env = Env();
 
-// group home for services, repos, and singletons
+// group home for services/repos/singletons and helpers yet to be moved
 //
 // Surely it is OK for something in the UI build tree to reach INTO env and access
-// a service/repo related instance with no state-modifying side effects, although I do
-// believe that sidestepping Provider is considered a crime against flutter in most
+// a service/repo related instance with no build state-modifying side effects, although
+// it is true that sidestepping Provider is considered a crime against flutter in most
 // UN member countries.
 //
 // Use the providers injected in main.dart rather than env when you can, I guess.
 // storage, lilarepo, wsrepo, assets, userrepo, all available via provider.
 
 class Env {
-  int get nowMillis => DateTime.now().millisecondsSinceEpoch;
-
   //UI get ui => it.get<UI>();
   Storage get store => it.get<Storage>();
   UserRepo get user => it.get<UserRepo>();
@@ -32,6 +33,7 @@ class Env {
   LilaRepo get lila => it.get<LilaRepo>();
   Assets get assets => it.get<Assets>();
 
+  Future<String?> get deviceId async => _getDeviceId();
   String get origin => dotenv.env['origin'] ?? "http://localhost:9663";
   String url(String path) => joinPath(origin, path);
   String get wsOrigin => dotenv.env['ws_origin'] ?? "ws://localhost:9664";
@@ -39,7 +41,17 @@ class Env {
 
   String? getVar(String variable) => dotenv.env[variable];
 
-  static String joinPath(String p1, String p2) {
+  // the following could be static, but don't want callers to have to worry about Env vs env
+  int get now => DateTime.now().millisecondsSinceEpoch;
+
+  String randomString({int len = 12}) {
+    var src = Random.secure();
+    return base64UrlEncode(List<int>.generate((len * 3 + 3) ~/ 4, (_) => src.nextInt(255)))
+        .substring(0, len)
+        .replaceAll(RegExp(r'[/+]'), '_');
+  }
+
+  String joinPath(String p1, String p2) {
     final base = Uri.parse(p1); // safely join p2 to p1, merging any query params
     final rhs = Uri.parse(p2);
     return base.replace(
@@ -61,7 +73,7 @@ class Env {
       await dotenv.load(fileName: "assets/conf/$appConfig.env");
     } catch (e) {
       dotenv.testLoad();
-      debugPrint("Failed to load config file.  Hope you like default values.");
+      debugPrint("Failed to load config.  I hear default values are lovely this time of year.");
     }
     it.registerSingleton<Storage>(Storage());
     await store.init();
@@ -77,7 +89,7 @@ class Env {
   }
 }
 
-Future<String?> _getId() async {
+Future<String?> _getDeviceId() async {
   var deviceInfo = DeviceInfoPlugin();
   if (Platform.isIOS) {
     var iosDeviceInfo = await deviceInfo.iosInfo;
@@ -86,6 +98,6 @@ Future<String?> _getId() async {
     var androidDeviceInfo = await deviceInfo.androidInfo;
     return androidDeviceInfo.androidId;
   } else {
-    return 'chrome-blah-blah';
+    return 'web';
   }
 }
