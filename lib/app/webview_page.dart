@@ -58,10 +58,10 @@ class _WebViewPageState extends State<WebViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text("InAppWebview is gud?")),
+        appBar: AppBar(title: Text("InAppWebview gud?")),
         body: SafeArea(
             child: Column(children: <Widget>[
-          TextField(
+          /*TextField(
             decoration: InputDecoration(prefixIcon: Icon(Icons.search)),
             controller: urlController,
             keyboardType: TextInputType.url,
@@ -72,13 +72,13 @@ class _WebViewPageState extends State<WebViewPage> {
               }
               webViewController?.loadUrl(urlRequest: URLRequest(url: url));
             },
-          ),
+          ),*/
           Expanded(
             child: Stack(
               children: [
                 InAppWebView(
                   key: webViewKey,
-                  initialUrlRequest: URLRequest(url: Uri.parse("https://inappwebview.dev/")),
+                  initialUrlRequest: URLRequest(url: Uri.parse("https://schlawg.org")),
                   initialOptions: options,
                   pullToRefreshController: pullToRefreshController,
                   onWebViewCreated: (controller) {
@@ -142,7 +142,7 @@ class _WebViewPageState extends State<WebViewPage> {
               ],
             ),
           ),
-          ButtonBar(
+          /*ButtonBar(
             alignment: MainAxisAlignment.center,
             children: <Widget>[
               ElevatedButton(
@@ -164,7 +164,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 },
               ),
             ],
-          ),
+          ),*/
         ])));
   }
 }
