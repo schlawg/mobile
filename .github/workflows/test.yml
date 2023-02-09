@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  unit-test:
+    name: Unit tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter doctor -v
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Code generation
+        run: flutter pub run build_runner build
+
+      - name: Verify formatting
+        run: flutter format --output=none --set-exit-if-changed .
+
+      - name: Analyze project source
+        run: flutter analyze
+
+      - name: Run DCM checks
+        run: flutter pub run dart_code_metrics:metrics analyze lib --no-fatal-style
+
+      - name: Run unit tests
+        run: flutter test
+
